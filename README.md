@@ -18,7 +18,7 @@ There are plans to automate the installation process - perhaps by expandingg the
 First, fetch the repository from github. To do so, run the following command:
 
 ```bash
-git clone https://www.github.com/ArielLevineLabNINDS/SeqSeek_Pipeline
+git clone https://github.com/walidabualafia/SeqSeek_Classify_Full_Pipeline.git
 ```
 
 Once it's fetched, move into the directory:
@@ -46,24 +46,18 @@ Currently, this pipeline requires that your query is aligned to the same genome 
 
 Work is on-going to build in an adaptor that handles all genomes. Until then, please align using the same genome!
 
-### 3. Create a Python Virtual Environment
+### 3. Create a Conda Environment
 
-It's best practice to install dependencies for Python Projects within a virtual environment. There are many different methods for creating and managing virtual environments. If you already have a method that you use in your workflow, then please create and activate the virtual environment that way.
+**OLD**: It's best practice to install dependencies for Python Projects within a virtual environment. There are many different methods for creating and managing virtual environments. If you already have a method that you use in your workflow, then please create and activate the virtual environment that way.
 
-If you don't have a preference, the following will create and activate a virtual environment on MacOS or Linux:
+**NEW**: Please use Conda to create an environment with Python 3.8, and avoid using venv. Please follow the updated instructions below:
 
-```bash
-python3 -m venv SeqSeek
-source SeqSeek/bin/activate
-```
-
-On a Windows system, it's a little different. In Windows, run the following:
+The following will create and activate a virtual environment on Linux:
 
 ```bash
-python3 -m venv SeqSeek
-SeqSeek\Scripts\activate.bat
+conda create -n seqseek-env python=3.8
+conda activate seqseek-env
 ```
-
 Once the environment has been created and activated, install the necessary dependencies via `pip`, as below:
 
 ```bash
@@ -73,29 +67,37 @@ pip install -r requirements.txt
 At this point, verify that installation has worked correctly by running the following command:
 
 ```bash
-python3 -m dvc --version
+dvc --version
 ```
 
 The output should look like `1.6.6` - the exact number may vary, depending on the most up-to-date version. If you see anything else, or an error message, please let us know by filling an issue [HERE](https://github.com/ArielLevineLabNINDS/SeqSeek_Pipeline/issues), and we will get back to you as soon as we can!
 
-### 4. Create a local renv library
+### 4. Load an R installation with all the Packages Pre-Installed
 
-The (rough) equivalent of a virtual environment in R is a local libray created by the [renv package](https://rstudio.github.io/renv/articles/renv.html). This process is a little more straightforward, as it's OS indepedent. First, open an R terminal. This can be at the commandline or in an IDE, like RStudio. You will then see a message about `renv` being installed and packages being out of date. Don't worry! To bring everything up-to-date, simply run:
+**OLD**: The (rough) equivalent of a virtual environment in R is a local libray created by the [renv package](https://rstudio.github.io/renv/articles/renv.html). This process is a little more straightforward, as it's OS indepedent. First, open an R terminal. This can be at the commandline or in an IDE, like RStudio. You will then see a message about `renv` being installed and packages being out of date. Don't worry! To bring everything up-to-date, simply run:
 
-```R
-renv::restore()
+**NEW**: Avoid using renv in shared environments. Given the R version is old, many of the packages are legacy and unattainable. Please consult with an system administrator at your site to determine the best implementation for you.
+
+```bash
+module load R/3.6.2
 ```
 
-This will install all the necessary packages locally, keeping your global R nice and clean! Also, it's loaded automatically any time you run R, so no need to activate it!
+This installation of R has all the packages from the `renv.lock` provided in the source repository. It is easier to share a single installation that duplicate it per-user. This helps us avoid any/all compilation errors.
 
 ### 5. Run the Pipeline
 
 Thanks to DVC, running the pipeline is quite straight forward. Just use the below command:
 
 ```bash
-python3 -m dvc repro
+dvc repro
 ```
 
 And everything should take care of itself. You'll see message printed along the way to let you know what steps you are on. The predicted labels will be stored as `results/final_cell_types.csv`. There will be 2 columns: `cell` and `class`. The first contains the name of the cell taken from the Seurat object, and the second the predicted cell type. Also, this information will be added as a metadata column named "predicted.id" to the original Seurat object. This updated Seurat object will be saved at `results/query.rds` to prevent conflicts.
 
 If you run into any issues, please let us know [HERE](https://github.com/ArielLevineLabNINDS/SeqSeek_Pipeline/issues).
+
+#### Note:
+
+There is currently no release for `SeuratObject < 4.0.0`. Given this project required `R = 3.6.2`, there is a possibility that the pipeline will not run successfully. To maintain compatibility with the required version of `R`, we need to install `SeuratObject = 3.0.0` which currently has no source.
+
+The pipeline might require a reimplementation to catch it up to date with current `Seurat`/`SeuratObject`.
